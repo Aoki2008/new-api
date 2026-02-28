@@ -47,6 +47,11 @@ func InitOptionMap() {
 	common.OptionMap["AutomaticDisableChannelEnabled"] = strconv.FormatBool(common.AutomaticDisableChannelEnabled)
 	common.OptionMap["AutomaticEnableChannelEnabled"] = strconv.FormatBool(common.AutomaticEnableChannelEnabled)
 	common.OptionMap["LogConsumeEnabled"] = strconv.FormatBool(common.LogConsumeEnabled)
+	common.OptionMap["LogRequestBodyEnabled"] = strconv.FormatBool(common.LogRequestBodyEnabled)
+	common.OptionMap["LogRequestBodyMaxBytes"] = strconv.Itoa(common.LogRequestBodyMaxBytes)
+	common.OptionMap["AuditWebhookUrl"] = common.AuditWebhookUrl
+	common.OptionMap["AuditWebhookSecret"] = common.AuditWebhookSecret
+	common.OptionMap["AuditWebhookTimeoutSeconds"] = strconv.Itoa(common.AuditWebhookTimeoutSeconds)
 	common.OptionMap["DisplayInCurrencyEnabled"] = strconv.FormatBool(common.DisplayInCurrencyEnabled)
 	common.OptionMap["DisplayTokenStatEnabled"] = strconv.FormatBool(common.DisplayTokenStatEnabled)
 	common.OptionMap["DrawingEnabled"] = strconv.FormatBool(common.DrawingEnabled)
@@ -248,6 +253,8 @@ func updateOptionMap(key string, value string) (err error) {
 			common.AutomaticEnableChannelEnabled = boolValue
 		case "LogConsumeEnabled":
 			common.LogConsumeEnabled = boolValue
+		case "LogRequestBodyEnabled":
+			common.LogRequestBodyEnabled = boolValue
 		case "DisplayInCurrencyEnabled":
 			// 兼容旧字段：同步到新配置 general_setting.quota_display_type（运行时生效）
 			// true -> USD, false -> TOKENS
@@ -314,6 +321,28 @@ func updateOptionMap(key string, value string) (err error) {
 		common.SMTPFrom = value
 	case "SMTPToken":
 		common.SMTPToken = value
+	case "LogRequestBodyMaxBytes":
+		intValue, _ := strconv.Atoi(value)
+		if intValue < 0 {
+			intValue = 0
+		}
+		if intValue > 1024*1024 {
+			intValue = 1024 * 1024
+		}
+		common.LogRequestBodyMaxBytes = intValue
+	case "AuditWebhookUrl":
+		common.AuditWebhookUrl = value
+	case "AuditWebhookSecret":
+		common.AuditWebhookSecret = value
+	case "AuditWebhookTimeoutSeconds":
+		intValue, _ := strconv.Atoi(value)
+		if intValue < 1 {
+			intValue = 1
+		}
+		if intValue > 60 {
+			intValue = 60
+		}
+		common.AuditWebhookTimeoutSeconds = intValue
 	case "ServerAddress":
 		system_setting.ServerAddress = value
 	case "WorkerUrl":

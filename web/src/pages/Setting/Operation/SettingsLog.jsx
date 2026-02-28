@@ -46,6 +46,11 @@ export default function SettingsLog(props) {
   const [loadingCleanHistoryLog, setLoadingCleanHistoryLog] = useState(false);
   const [inputs, setInputs] = useState({
     LogConsumeEnabled: false,
+    LogRequestBodyEnabled: false,
+    LogRequestBodyMaxBytes: '8192',
+    AuditWebhookUrl: '',
+    AuditWebhookSecret: '',
+    AuditWebhookTimeoutSeconds: '5',
     historyTimestamp: dayjs().subtract(1, 'month').toDate(),
   });
   const refForm = useRef();
@@ -186,6 +191,8 @@ export default function SettingsLog(props) {
         currentInputs[key] = props.options[key];
       }
     }
+    // Secrets are not returned from /api/option/, keep it empty by default and only send when user fills it.
+    currentInputs['AuditWebhookSecret'] = '';
     currentInputs['historyTimestamp'] = inputs.historyTimestamp;
     setInputs(Object.assign(inputs, currentInputs));
     setInputsRow(structuredClone(currentInputs));
@@ -214,6 +221,90 @@ export default function SettingsLog(props) {
                       LogConsumeEnabled: value,
                     });
                   }}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Switch
+                  field={'LogRequestBodyEnabled'}
+                  label={t('导出请求原始数据到外部审计')}
+                  extraText={t(
+                    '开启后，将把请求体前 N 字节通过 Webhook 发送到外部审计系统；本系统不落库，可能包含敏感信息，请谨慎开启。',
+                  )}
+                  size='default'
+                  checkedText='｜'
+                  uncheckedText='〇'
+                  onChange={(value) => {
+                    setInputs({
+                      ...inputs,
+                      LogRequestBodyEnabled: value,
+                    });
+                  }}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.InputNumber
+                  label={t('请求体导出上限')}
+                  field={'LogRequestBodyMaxBytes'}
+                  step={1024}
+                  min={0}
+                  suffix={'bytes'}
+                  disabled={!inputs.LogRequestBodyEnabled}
+                  extraText={t('仅导出前 N 字节；建议 4KB~64KB，过大将显著增加审计数据量')}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      LogRequestBodyMaxBytes: String(value),
+                    })
+                  }
+                />
+              </Col>
+              <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                <Form.Input
+                  label={t('审计 Webhook 地址')}
+                  field={'AuditWebhookUrl'}
+                  disabled={!inputs.LogRequestBodyEnabled}
+                  placeholder={t('https://audit.example.com/webhook')}
+                  extraText={t('仅支持 http/https；建议使用 https 并配置签名密钥')}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      AuditWebhookUrl: value,
+                    })
+                  }
+                />
+              </Col>
+              <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                <Form.Input
+                  label={t('审计 Webhook 密钥（用于签名，可选）')}
+                  field={'AuditWebhookSecret'}
+                  mode='password'
+                  disabled={!inputs.LogRequestBodyEnabled}
+                  placeholder={t('留空则不签名')}
+                  extraText={t('出于安全原因不会回显已保存的密钥；填写后将覆盖保存')}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      AuditWebhookSecret: value,
+                    })
+                  }
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.InputNumber
+                  label={t('审计 Webhook 超时')}
+                  field={'AuditWebhookTimeoutSeconds'}
+                  step={1}
+                  min={1}
+                  max={60}
+                  suffix={'s'}
+                  disabled={!inputs.LogRequestBodyEnabled}
+                  extraText={t('建议 3~10 秒')}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      AuditWebhookTimeoutSeconds: String(value),
+                    })
+                  }
                 />
               </Col>
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>

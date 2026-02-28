@@ -63,6 +63,8 @@ const OperationSetting = () => {
 
     /* 日志设置 */
     LogConsumeEnabled: false,
+    LogRequestBodyEnabled: false,
+    LogRequestBodyMaxBytes: 8192,
 
     /* 监控设置 */
     ChannelDisableThreshold: 0,

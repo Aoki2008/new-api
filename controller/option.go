@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -49,7 +49,7 @@ type OptionUpdateRequest struct {
 
 func UpdateOption(c *gin.Context) {
 	var option OptionUpdateRequest
-	err := json.NewDecoder(c.Request.Body).Decode(&option)
+	err := common.DecodeJson(c.Request.Body, &option)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
@@ -240,6 +240,17 @@ func UpdateOption(c *gin.Context) {
 				"message": err.Error(),
 			})
 			return
+		}
+	case "AuditWebhookUrl":
+		if option.Value != "" {
+			u, err := url.ParseRequestURI(option.Value.(string))
+			if err != nil || u == nil || (u.Scheme != "http" && u.Scheme != "https") {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": "无效的审计 Webhook 地址（仅支持 http/https）",
+				})
+				return
+			}
 		}
 	}
 	err = model.UpdateOption(option.Key, option.Value.(string))

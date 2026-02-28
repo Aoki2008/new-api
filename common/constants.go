@@ -73,6 +73,11 @@ var DebugEnabled bool
 var MemoryCacheEnabled bool
 
 var LogConsumeEnabled = true
+var LogRequestBodyEnabled = false
+var LogRequestBodyMaxBytes = 8192
+var AuditWebhookUrl = ""
+var AuditWebhookSecret = ""
+var AuditWebhookTimeoutSeconds = 5
 
 var TLSInsecureSkipVerify bool
 var InsecureTLSConfig = &tls.Config{InsecureSkipVerify: true}
