@@ -8,6 +8,48 @@
 - **截断预览**：仅导出请求体前 N 字节（可配置），避免超大请求导致审计侧压力过大。
 - **跳过 multipart**：`multipart/form-data`（文件上传）请求体不导出（避免二进制文件内容进入审计）。
 
+## 快速开始：自带审计接收端（cmd/audit-server）
+
+项目内置了一个可独立部署的审计接收端示例：`cmd/audit-server`，用于接收本项目发出的审计 Webhook，并提供简单的列表/详情页用于审查。
+
+### 1) 启动 audit-server
+
+在另一个主机/容器上运行（推荐与 new-api 分开部署）：
+
+```bash
+go run ./cmd/audit-server
+```
+
+常用环境变量（audit-server）：
+
+- `AUDIT_LISTEN_ADDR`：监听地址（默认 `:8081`）
+- `AUDIT_DB_DRIVER`：`sqlite`/`mysql`/`postgres`（默认 `sqlite`）
+- `AUDIT_DB_DSN`：数据库 DSN（默认 `audit.db`）
+- `AUDIT_WEBHOOK_SECRET`：Webhook 验签密钥（建议设置；需与 new-api 的 `AuditWebhookSecret` 一致）
+- `AUDIT_AUTH_TOKEN`：可选，为 UI/API 增加访问鉴权（请求头 `Authorization: Bearer <token>`）
+- `AUDIT_MAX_BODY_BYTES`：Webhook payload 最大接收大小（默认 `2097152`）
+- `AUDIT_MAX_SKEW_SECONDS`：允许的时间戳偏移（默认 `300`）
+- `AUDIT_TRUST_PROXY_HEADERS`：是否信任 `X-Forwarded-For/X-Real-IP`（默认 `false`）
+
+UI：
+
+- `http://<audit-server>:8081/events`
+
+API：
+
+- `GET /api/events?limit=50&before_id=0&request_id=xxx&path=/v1/chat/completions&user_id=1&status_code=200`
+- `GET /api/events/{id}`
+
+### 2) 配置 new-api 发送到 audit-server
+
+在 new-api 管理后台：`运营设置 -> 日志设置` 中启用并填写：
+
+- `LogRequestBodyEnabled = true`
+- `LogRequestBodyMaxBytes = 8192`（按需调整）
+- `AuditWebhookUrl = http://<audit-server>:8081/webhook/newapi`
+- `AuditWebhookSecret = <同 AUDIT_WEBHOOK_SECRET>`
+- `AuditWebhookTimeoutSeconds = 5`
+
 ## 配置项（运营设置 -> 日志设置）
 
 - `LogRequestBodyEnabled`：是否启用外部审计导出（默认 `false`）
@@ -91,4 +133,3 @@ expected := hex.EncodeToString(mac.Sum(nil))
 - Webhook 为 best-effort 异步投递，建议审计系统侧做落库与告警。
 - 建议按 `X-NewAPI-Request-Id` 或 `request_id` 做幂等去重（如需）。
 - 建议使用 HTTPS，并配置 `AuditWebhookSecret` 验签。
-
