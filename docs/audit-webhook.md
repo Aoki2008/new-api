@@ -8,15 +8,17 @@
 - **截断预览**：仅导出请求体前 N 字节（可配置），避免超大请求导致审计侧压力过大。
 - **跳过 multipart**：`multipart/form-data`（文件上传）请求体不导出（避免二进制文件内容进入审计）。
 
-## 快速开始：自带审计接收端（cmd/audit-server）
+## 快速开始：外部审计接收端（NewAPI-Audit）
 
-项目内置了一个可独立部署的审计接收端示例：`cmd/audit-server`，用于接收本项目发出的审计 Webhook，并提供简单的列表/详情页用于审查。
+审计接收端已拆分为独立仓库：`https://github.com/Aoki2008/NewAPI-Audit.git`，用于接收本项目发出的审计 Webhook，并提供简单的列表/详情页用于审查。
 
 ### 1) 启动 audit-server
 
 在另一个主机/容器上运行（推荐与 new-api 分开部署）：
 
 ```bash
+git clone https://github.com/Aoki2008/NewAPI-Audit.git
+cd NewAPI-Audit
 go run ./cmd/audit-server
 ```
 
